@@ -1,0 +1,141 @@
+\documentclass[12pt,a4paper]{article} % Default style and margins
+
+% \usepackage[a4,center,noinfo,cross, width=16.5cm,height=24.5cm]{crop}
+
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{listings}
+
+\newtheorem*{lemma}{Lemma}
+\newtheorem*{theorem}{Theorem}
+
+\DeclareMathOperator{\Rank}{Rank}
+\DeclareMathOperator{\Colsp}{colsp}
+\DeclareMathOperator{\Rowsp}{rowsp}
+\DeclareMathOperator{\Range}{Range}
+\DeclareMathOperator{\Span}{Span}
+\DeclareMathOperator{\Null}{Null}
+
+\title{Least Squares and the Pseudoinverse}
+\author{Kenton Lam}
+
+\begin{document}
+\maketitle
+
+The goal of this is to explain how the (Moore-Penrose) pseudoinverse relates 
+to the last squares problem. Specifically, the psuedoinverse allows one to 
+compute the least-norm solution to the problem.
+
+\subsection*{Notation}
+$\mathbf A \in \mathbb R^{m \times n}$ denotes an $m \times n$ matrix 
+and $\mathbf A^\dagger$ is its pseudoinverse. $\Range \mathbf A$ is the vector space 
+spanned by the columns of $\mathbf A$ (the column space). As a consequence, $\Range \mathbf A^\top$ is 
+the span of the rows of $\mathbf A$ (the row space). $\Null \mathbf A$ is the null space of $\mathbf A$.
+
+\subsection*{Fundamental Theorem of Linear Algebra}
+\begin{theorem}
+    If $\mathbf A \in \mathbb C^{m \times n}$, then 
+    \begin{align*}
+        \Null (\mathbf A) = \Range (\mathbf A^*)^\perp \text{ and }
+        \Null (\mathbf A^*) = \Range(\mathbf A)^\perp
+    \end{align*}
+    where $\mathbf B^\perp$ denotes the orthogonal complement of $\mathbf B$ in its 
+    containing vector space.
+\end{theorem}
+
+\section{Least Squares}
+The ordinary least squares problems is the following.
+
+Given a matrix $\mathbf A \in \mathbb R^{m \times n}$ 
+and a vector $\bm b \in \mathbb R^{n}$, solve
+\begin{align*}
+    \min_{\bm x \in \mathbb R^n} \frac{1}{2} \| \mathbf A \bm x - \bm b \| ^2.
+\end{align*}
+The vector $\bm x$ is called the solution to this least squares problem. Note that this 
+solution may not be unique.
+
+\subsection{Pseudoinverse}
+First, let's discuss the pseudoinverse.
+It can be shown that there exists a unique $\mathbf A^\dagger \in \mathbb R^{n \times m}$ satisfying the Moore-Penrose conditions:
+\begin{enumerate}
+    \item $\mathbf A \mathbf A^\dagger \mathbf A = \mathbf A$
+    \item $\mathbf A^\dagger \mathbf A \mathbf A^\dagger = \mathbf A^\dagger$
+    \item $(\mathbf A \mathbf A^\dagger)^\top = \mathbf A \mathbf A^\dagger$ (so $\mathbf A \mathbf A^\dagger$ is symmetric)
+    \item $(\mathbf A^\dagger \mathbf A)^\top = \mathbf A^\dagger \mathbf A$ (so $\mathbf A^\dagger \mathbf A$ is symmetric)
+\end{enumerate}
+Firstly, we show that $\mathbf A \mathbf A^\dagger$ is a projection matrix:
+\begin{align*}
+    (\mathbf A \mathbf A^\dagger) (\mathbf A \mathbf A^\dagger) = (\mathbf A \mathbf A^\dagger \mathbf A) \mathbf A^\dagger = \mathbf A \mathbf A^\dagger.
+\end{align*}
+Because it is symmetric, it must also be an orthogonal projection onto its range.
+
+Now, we claim that $\Range \mathbf A^\dagger = \Range \mathbf A^\top$. Because $\Range \mathbf A^\top \perp \Null \mathbf A$, this is 
+equivalent to saying $\Range \mathbf A^\dagger \perp \Null \mathbf A$. Suppose $\mathbf A^\dagger \bm x \in \Range \mathbf A^\dagger$ and $\bm y \in \Null \mathbf A$. Then,
+to show they are orthogonal,
+\begin{align*}
+    (\mathbf A^\dagger \bm x)^\top \bm y &= \bm x^\top (\mathbf A^\dagger)^\top \bm y \\ 
+    &= \bm x^\top (\mathbf A^\dagger \mathbf A\mathbf A^\dagger)^\top \bm y& \text{(using property of pseudoinverse)}&\\ 
+    &= \bm x^\top ((\mathbf A^\dagger \mathbf A)\mathbf A^\dagger)^\top \bm y \\ 
+    &= \bm x^\top (\mathbf A^\dagger)^\top (\mathbf A^\dagger\mathbf A)^\top \bm y \\ 
+    &= \bm x^\top  (\mathbf A^\dagger)^\top \mathbf A^\dagger\mathbf A \bm y & \text{(because $\mathbf A^\dagger \mathbf A$ is symmetric)}\\ 
+    &= \bm 0 & \text{(because $\bm y \in \Null \mathbf A$)}
+\end{align*}
+An identical process shows that $\Null \mathbf A^\dagger \perp \Range \mathbf A$ and hence
+$\Null \mathbf A^\dagger = \Null \mathbf A^\top$.
+
+\newpage
+\subsection{Minimising the norm}
+The goal is to solve for $\bm x$ which minimises
+\begin{align*}
+    \frac{1}{2}\| \mathbf A \bm x - \bm b \| ^2.
+\end{align*}
+Looking only at the norm, we can decompose $\bm b$ into two orthogonal vectors---one in $\Null \mathbf A^\top$ and one 
+in $\Range \mathbf A$. This is done using the orthogonal projection $\mathbf A\mathbf A^\dagger$ we found earlier. 
+It should be clear that this has not changed the equation. 
+\begin{align*}
+    \| \mathbf A \bm x - \bm b \| ^2 &= \| \mathbf A \bm x - (\mathbf A \mathbf A^\dagger + (\mathbf I - \mathbf A\mathbf A^\dagger))\bm b \|^2
+\end{align*}
+Now, we expand and regroup terms to get 
+\begin{align*}
+    \| \mathbf A \bm x - \bm b \| ^2 &= \| \underbrace{(\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b)}_{\in \,\Range \mathbf A} + \underbrace{(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b}_{\in \, \Null \mathbf A^\top} \|^2.
+\end{align*}
+It is obvious why the left part is in $\Range \mathbf A$. Recall that $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto $\Range \mathbf A$.
+$\mathbf I - \mathbf A \mathbf A^\dagger$ projects onto the orthogonal complement of this, which is the $\Null \mathbf A^\top$.
+
+Because $\Null \mathbf A^\top \perp \Range \mathbf A$, we can use Pythagoras' theorem to split the norm.
+\begin{align*}
+    \| {(\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b)} + {(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b} \|^2
+    &= \| {\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b} \| ^2 + \| {(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b}  \| ^2
+\end{align*}
+The rightmost component is a constant so we can't change it. In fact, if $\mathbf A \bm x = \bm b$ has no exact solution, 
+it is precisely because this part is non-zero. For our purposes of least squares, we can ignore it because 
+\begin{align*}
+    \arg\min \| \mathbf A \bm x - \bm b \| ^2 &= \arg \min \| {\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b} \| ^2
+\end{align*}
+The value of the minimum is 0. It's important to note that this can be zero when 
+the original least squares might not be 0. This is beacuse $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto 
+$\Range \mathbf A$, so there always exists  an $\bm x$ such that $\mathbf A \bm x = \mathbf A \mathbf A^\dagger \bm b$ and the 
+norm is 0, namely $\bm x = \mathbf A^\dagger \bm b$.
+
+Contrast this with the original $\| \mathbf A \bm x - \bm b \|$. If $\bm b \notin \Range \mathbf A$, this will never be 0.
+However, we can minimise it, which is what we aim to do with least squares. 
+
+Finally, we want show that $\bm x = \mathbf A^\dagger \bm b$ 
+is the solution with the smallest norm. Because $\bm x \in \Range \mathbf A^\top$, 
+$\bm x$ has no components in the direction of  the null space. This is shown by 
+\begin{align*}
+    \bm x=\mathbf A^\dagger \bm b &= (\mathbf A^\dagger \mathbf A)\mathbf A^\dagger\bm b + \underbrace{(\mathbf I - \mathbf A^\dagger \mathbf A)\mathbf A^\dagger}_{=\,\bm 0}\bm b.
+\end{align*}
+If we add some component from the null space, we will get other solutions (because $\mathbf A \bm x$ will not change). 
+These extra solutions can be expressed as
+\begin{align*}
+    \bm x &= \mathbf A^\dagger\bm b + \underbrace{(\mathbf I - \mathbf A^\dagger \mathbf A)\bm y}_{\in \,\Null \mathbf A}, \quad \text{ for any }y \in \mathbb R^m.
+\end{align*}
+Clearly, these solutions will have a larger norm than the original $\mathbf A^\dagger \bm b$, so we conclude 
+$\mathbf A^\dagger \bm b$  is the solution with the smallest norm. \\[1em]
+Corollary: If $\Null \mathbf A = \left\{ \bm 0\right\}$, then $\mathbf A^\dagger \bm b = \mathbf A^{-1} \bm b$ is the unique solution.
+
+\end{document}
