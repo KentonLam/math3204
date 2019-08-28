@@ -26,8 +26,9 @@
 \maketitle
 
 The goal of this is to explain how the (Moore-Penrose) pseudoinverse relates 
-to the last squares problem. Specifically, the psuedoinverse allows one to 
-compute the least-norm solution to the problem.
+to the least squares problem. Specifically, the psuedoinverse allows one to 
+compute the least-norm solution to the problem in all cases, 
+and if a unique solution exists it will give you the unique solution.
 
 \subsection*{Notation}
 $\mathbf A \in \mathbb R^{m \times n}$ denotes an $m \times n$ matrix 
@@ -109,20 +110,20 @@ It is obvious why the left part is in $\Range \mathbf A$. For the right part, re
 so 
 $\mathbf I - \mathbf A \mathbf A^\dagger$ projects onto the orthogonal complement of this which is the $\Null \mathbf A^\top$.
 
-Because $\Null \mathbf A^\top \perp \Range \mathbf A$, we can use Pythagoras' theorem to split the norm.
+Because $\Null \mathbf A^\top \perp \Range \mathbf A$, we can use Pythagoras' theorem to split the norm into
 \begin{align*}
     \| {(\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b)} + {(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b} \|^2
     &= \| {\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b} \| ^2 + \| {(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b}  \| ^2
 \end{align*}
 The rightmost component is a constant so we can't change it. 
 In fact, if $\mathbf A \bm x = \bm b$ has no exact solution, 
-it is precisely because this part is non-zero. For our purposes of least squares, we can ignore it because 
+it is precisely because this part is non-zero. For our purpose of least squares, we can ignore it because 
 \begin{align*}
     \arg\min \| \mathbf A \bm x - \bm b \| ^2 &= \arg \min \| {\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b} \| ^2
 \end{align*}
 The value of the minimum is 0. 
 It's important to note that this can be zero even when 
-the original least squares is not 0. This is beacuse $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto 
+the original least squares is not 0. This is because $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto 
 $\Range \mathbf A$, so there always exists  an $\bm x$ such that $\mathbf A \bm x = \mathbf A \mathbf A^\dagger \bm b$ and the 
 norm is 0, namely $\bm x = \mathbf A^\dagger \bm b$.
 
