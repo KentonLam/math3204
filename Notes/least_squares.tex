@@ -45,6 +45,7 @@ the span of the rows of $\mathbf A$ (the row space). $\Null \mathbf A$ is the nu
     where $\mathbf B^\perp$ denotes the orthogonal complement of $\mathbf B$ in its 
     containing vector space.
 \end{theorem}
+Note that from here, we will only consider real matrices so $\mathbf A^* = \mathbf A^\top$.
 
 \section{Least Squares}
 The ordinary least squares problems is the following.
@@ -71,6 +72,8 @@ Firstly, we show that $\mathbf A \mathbf A^\dagger$ is a projection matrix:
     (\mathbf A \mathbf A^\dagger) (\mathbf A \mathbf A^\dagger) = (\mathbf A \mathbf A^\dagger \mathbf A) \mathbf A^\dagger = \mathbf A \mathbf A^\dagger.
 \end{align*}
 Because it is symmetric, it must also be an orthogonal projection onto its range.
+Recall that if $P$ is an orthogonal projection, then $\mathbf I - \mathbf P$ is a projection onto a 
+subspace orthogonal to $\Range \mathbf P$. These facts will be useful later on.
 
 Now, we claim that $\Range \mathbf A^\dagger = \Range \mathbf A^\top$. Because $\Range \mathbf A^\top \perp \Null \mathbf A$, this is 
 equivalent to saying $\Range \mathbf A^\dagger \perp \Null \mathbf A$. Suppose $\mathbf A^\dagger \bm x \in \Range \mathbf A^\dagger$ and $\bm y \in \Null \mathbf A$. Then,
@@ -87,7 +90,7 @@ An identical process shows that $\Null \mathbf A^\dagger \perp \Range \mathbf A$
 $\Null \mathbf A^\dagger = \Null \mathbf A^\top$.
 
 \newpage
-\subsection{Minimising the norm}
+\subsection{Solving least squares}
 The goal is to solve for $\bm x$ which minimises
 \begin{align*}
     \frac{1}{2}\| \mathbf A \bm x - \bm b \| ^2.
@@ -110,18 +113,22 @@ Because $\Null \mathbf A^\top \perp \Range \mathbf A$, we can use Pythagoras' th
     \| {(\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b)} + {(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b} \|^2
     &= \| {\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b} \| ^2 + \| {(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b}  \| ^2
 \end{align*}
-The rightmost component is a constant so we can't change it. In fact, if $\mathbf A \bm x = \bm b$ has no exact solution, 
+The rightmost component is a constant so we can't change it. 
+In fact, if $\mathbf A \bm x = \bm b$ has no exact solution, 
 it is precisely because this part is non-zero. For our purposes of least squares, we can ignore it because 
 \begin{align*}
     \arg\min \| \mathbf A \bm x - \bm b \| ^2 &= \arg \min \| {\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b} \| ^2
 \end{align*}
-The value of the minimum is 0. It's important to note that this can be zero when 
-the original least squares might not be 0. This is beacuse $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto 
+The value of the minimum is 0. 
+It's important to note that this can be zero even when 
+the original least squares is not 0. This is beacuse $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto 
 $\Range \mathbf A$, so there always exists  an $\bm x$ such that $\mathbf A \bm x = \mathbf A \mathbf A^\dagger \bm b$ and the 
 norm is 0, namely $\bm x = \mathbf A^\dagger \bm b$.
 
 Contrast this with the original $\| \mathbf A \bm x - \bm b \|$. If $\bm b \notin \Range \mathbf A$, this will never be 0.
-However, we can minimise it, which is what we aim to do with least squares. 
+However, we can minimise it which is what we aim to do with least squares. 
+
+\subsection{The minimum norm solution}
 
 Finally, we want show that $\bm x = \mathbf A^\dagger \bm b$ 
 is the solution with the smallest norm. Because $\bm x \in \Range \mathbf A^\top$, 
