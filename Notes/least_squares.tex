@@ -45,10 +45,10 @@ the span of the rows of $\mathbf A$ (the row space). $\Null \mathbf A$ is the nu
     where $\mathbf B^\perp$ denotes the orthogonal complement of $\mathbf B$ in its 
     containing vector space.
 \end{theorem}
-Note that from here, we will only consider real matrices so $\mathbf A^* = \mathbf A^\top$.
+Note that from here on, we will only consider real matrices so $\mathbf A^* = \mathbf A^\top$.
 
 \section{Least Squares}
-The ordinary least squares problems is the following.
+The ordinary least squares problem is the following.
 
 Given a matrix $\mathbf A \in \mathbb R^{m \times n}$ 
 and a vector $\bm b \in \mathbb R^{n}$, solve
@@ -72,8 +72,8 @@ Firstly, we show that $\mathbf A \mathbf A^\dagger$ is a projection matrix:
     (\mathbf A \mathbf A^\dagger) (\mathbf A \mathbf A^\dagger) = (\mathbf A \mathbf A^\dagger \mathbf A) \mathbf A^\dagger = \mathbf A \mathbf A^\dagger.
 \end{align*}
 Because it is symmetric, it must also be an orthogonal projection onto its range.
-Recall that if $P$ is an orthogonal projection, then $\mathbf I - \mathbf P$ is a projection onto a 
-subspace orthogonal to $\Range \mathbf P$. These facts will be useful later on.
+Recall that if $\mathbf P$ is an orthogonal projection, then $\mathbf I - \mathbf P$ is a projection onto a 
+subspace orthogonal to $\Range \mathbf P$. These facts will be used later on.
 
 Now, we claim that $\Range \mathbf A^\dagger = \Range \mathbf A^\top$. Because $\Range \mathbf A^\top \perp \Null \mathbf A$, this is 
 equivalent to saying $\Range \mathbf A^\dagger \perp \Null \mathbf A$. Suppose $\mathbf A^\dagger \bm x \in \Range \mathbf A^\dagger$ and $\bm y \in \Null \mathbf A$. Then,
@@ -105,8 +105,9 @@ Now, we expand and regroup terms to get
 \begin{align*}
     \| \mathbf A \bm x - \bm b \| ^2 &= \| \underbrace{(\mathbf A \bm x - \mathbf A \mathbf A^\dagger \bm b)}_{\in \,\Range \mathbf A} + \underbrace{(\mathbf I - \mathbf A\mathbf A^\dagger)\bm b}_{\in \, \Null \mathbf A^\top} \|^2.
 \end{align*}
-It is obvious why the left part is in $\Range \mathbf A$. Recall that $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto $\Range \mathbf A$.
-$\mathbf I - \mathbf A \mathbf A^\dagger$ projects onto the orthogonal complement of this, which is the $\Null \mathbf A^\top$.
+It is obvious why the left part is in $\Range \mathbf A$. For the right part, recall that $\mathbf A \mathbf A^\dagger$ is an orthogonal projection onto $\Range \mathbf A$
+so 
+$\mathbf I - \mathbf A \mathbf A^\dagger$ projects onto the orthogonal complement of this which is the $\Null \mathbf A^\top$.
 
 Because $\Null \mathbf A^\top \perp \Range \mathbf A$, we can use Pythagoras' theorem to split the norm.
 \begin{align*}
