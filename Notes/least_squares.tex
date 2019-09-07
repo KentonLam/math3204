@@ -52,7 +52,7 @@ Note that from here on, we will only consider real matrices so $\mathbf A^* = \m
 The ordinary least squares problem is the following.
 
 Given a matrix $\mathbf A \in \mathbb R^{m \times n}$ 
-and a vector $\bm b \in \mathbb R^{n}$, solve
+and a vector $\bm b \in \mathbb R^{m}$, solve
 \begin{align*}
     \min_{\bm x \in \mathbb R^n} \frac{1}{2} \| \mathbf A \bm x - \bm b \| ^2.
 \end{align*}
@@ -141,7 +141,7 @@ $\bm x$ has no components in the direction of  the null space. This is shown by
 If we add some component from the null space, we will get other solutions (because $\mathbf A \bm x$ will not change). 
 These extra solutions can be expressed as
 \begin{align*}
-    \bm x &= \mathbf A^\dagger\bm b + \underbrace{(\mathbf I - \mathbf A^\dagger \mathbf A)\bm y}_{\in \,\Null \mathbf A}, \quad \text{ for any }y \in \mathbb R^m.
+    \bm x &= \mathbf A^\dagger\bm b + \underbrace{(\mathbf I - \mathbf A^\dagger \mathbf A)\bm y}_{\in \,\Null \mathbf A}, \quad \text{ for any }\bm y \in \mathbb R^m.
 \end{align*}
 Clearly, these solutions will have a larger norm than the original $\mathbf A^\dagger \bm b$, so we conclude 
 $\mathbf A^\dagger \bm b$  is the solution with the smallest norm. \\[1em]
