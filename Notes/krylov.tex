@@ -11,6 +11,7 @@
 
 \newtheorem*{lemma}{Lemma}
 \newtheorem*{theorem}{Theorem}
+\newtheorem*{proposition}{Proposition}
 \newtheorem*{definition}{Definition}
 
 \DeclareMathOperator{\Rank}{Rank}
@@ -26,7 +27,7 @@
 \begin{document}
 \maketitle
 
-This document aims to describe Krylov subspace methods, 
+These notes aim to describe Krylov subspace methods, 
 one of the best options for solving linear systems of equations.
 Briefly, they have the following desirable properties:
 \begin{itemize}
@@ -36,7 +37,8 @@ Briefly, they have the following desirable properties:
     \item For approximate solutions, Krylov methods have good convergence/approximation properties.
 \end{itemize}
 This is based on MATH3204 lectures and notes, lectured by Fred Roosta. 
-The lecure slides contain proofs of some theorems not proved here.
+These notes are meant to give an intuitive understanding of the topic and 
+omit many proofs which can be found in the lecture slides.
 
 \section{Introduction}
 The general form of a linear system is 
@@ -278,12 +280,154 @@ column. As block matrices, this can be visualised as
         \begin{matrix}
             0 & \cdots & 0
         \end{matrix} & h_{j+1,j}
-    \end{bmatrix}
+    \end{bmatrix}.
 \end{align*}
-Because we only change the last columns and rows, this can be reduced to 
+Because we only change the last column and row in this iteration, this can be reduced to 
 \begin{align*}
-    \mathbf A \bm q_j = h_{1j}\bm q_1 + h_{2j} \bm q_2 + \cdots + h_{j+1,j}\bm q_{j+1}
+    \mathbf A \bm q_j = h_{1j}\bm q_1 + h_{2j} \bm q_2 + \cdots + h_{j+1,j}\bm q_{j+1}.
 \end{align*}
+Through a similar process to the $k=2$ case, we have 
+\begin{align*}
+    h_{ij} &= \langle \bm q_i, \mathbf A\bm q_j \rangle \quad \text{for } i=1, \ldots, j \\ 
+    h_{j+1,j} &= \| \mathbf A \bm q_j - \textstyle\sum_{i=1}^j h_{ij} \bm q_i \| \\ 
+    \bm q_{j+1} &= \frac{\mathbf A \bm q_j - \sum_{i=1}^j h_{ij} \bm q_i }{h_{j+1,j}}
+\end{align*}
+From this, we can easily derive an algorithm for the Arnoldi process.
+If at any point, $h_{j+1,j} = 0$, then the algorithm terminates. 
+
+\subsection{Results}
+\begin{theorem}
+    Assume the Arnoldi process does not terminate before $k$ steps. Then the
+vectors $\left\{\bm{q}_{1}, \bm{q}_{2}, \ldots, \bm{q}_{k}\right\}$ 
+form an orthonormal basis for $\mathcal{K}_{k}\left(\mathbf{A}, \bm{r}_{0}\right)$.
+\end{theorem}
+However, if Arnoldi breaks down at step $j$, then that means $q_{j+1}$ can be written 
+as a linear combination of the previous vectors. This should sound familiar. In fact,
+we have a theorem.
+\begin{theorem}
+    The Arnoldi process breaks down at step $j$, i.e.\ $h_{j+1, j}=0$, if and only if the grade of $\bm{r}_{0}$
+     w.r.t. $\mathbf{A}$ is $j$. That is, $t\left(\bm{r}_{0}, \bm{A}\right)=j$.
+\end{theorem}
+For this reason, we call this termination a ``lucky breakdown''.
+
+\section{Optimality Criterion}
+Among infinitely many vectors, 
+what is the ``best'' $\bm x_k \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)$?
+
+\textbf{Note.} For the remainder, we assume $\mathbf A \in \mathbb R^{n \times n}$
+and $\bm b \in \mathbb R^n$ for simplicity. That is, everything is real-valued.
+
+Some natural optimality conditions are 
+\iffalse
+\bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min }
+\fi
+\begin{itemize}    
+    \item $\bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \| \bm x - \bm x^\star \|_2$.
+    \begin{itemize}
+        \item However, this is not quite possible since we don't know $\bm x^\star$.
+    \end{itemize}
+    \item For $\mathbf A \succ \mathbf 0$, minimise the energy norm:
+    \begin{align*}
+        \bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \|\bm x - \bm x^\star\|_\mathbf A = \bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \frac{1}{2} \langle \bm x, \mathbf A \bm x \rangle - \langle \bm b, \bm x \rangle.
+    \end{align*}
+    \begin{itemize}
+        \item This is conjugate gradient (CG).
+    \end{itemize}
+    \item Minimise the residual:
+    \begin{align*}
+        \bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \| \mathbf A \bm x - \bm b \|_2
+    \end{align*}
+    \begin{itemize}
+        \item For symmetric $\mathbf A$, this is MINRES.
+        \item For nonsymmetric $\mathbf A$, this is GMRES.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Projection Methods}
+However, there is one condition which can unify many aspects of the analysis in 
+a more general way for all Krylov methods:
+\begin{itemize}
+    \item Find $\bm x_k \in  \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)$ such that 
+    $\bm r_k \perp \mathcal L_k$ where $\mathcal L_k$ is some $k$-dimensional subspace.
+\end{itemize}
+These are called \textit{projection methods}. The intuition behind projection 
+methods is this:
+\begin{itemize}
+    \item Once a basis has been constructed, there are $k$ degrees of freedom
+    for picking a point in a $k$-dimensional affine subspace.
+    \item So, to uniquely determine a point, we need in general $k$ constraints.
+    \item A typical way is to impose that the residual is orthogonal to $k$
+    linearly independent vectors, e.g.\ the basis of another $k$-dimensional
+    subspace.
+\end{itemize}
+Projection methods have the following ingredients: a \textbf{search subspace} 
+$\mathcal K_k$, a \textbf{constraint subspace} $\mathcal L_k$ and the 
+\textbf{Petrov-Galerkin conditions} $\bm x_k \in  \bm x_0 + \mathcal K_k$
+such that $\bm r_k \perp \mathcal L_k$.
+
+If $\mathcal K_k = \mathcal L_k$, this is orthogonal projection. If $\mathcal L_k \ne \mathcal K_k$, 
+this is oblique projection.
+
+\subsection{Imposing Conditions}
+Let $\bm x_k = \bm x_0 + \bm z_k$ where $\bm x_k \in \mathcal K_k$.
+How can we enforce these constraints? Specifically, we need
+\begin{align*}
+    \bm{z}_{k} \in \mathcal{K}_{k}
+    \quad\text{and}\quad
+    \left\langle\bm{r}_{0}-\mathbf{A} \bm{z}_{k}, \bm{w}\right\rangle= 0, ~\forall ~\bm{w} \in \mathcal{L}_{k}.
+\end{align*}
+Suppose $\mathbf K_k$ and $\mathbf L_k$ are orthonormal bases for $\mathcal K_k$
+and $\mathcal L_k$ respectively.  Then, 
+\begin{align*}
+    \bm{z}_{k} \in \mathcal{K}_{k} &\iff  \bm z_k = \mathbf K_k \bm y_k, \text{ for some } \bm y_k \in \mathbb R^k \\ 
+    \bm r_0 - \mathbf A \bm z_k \perp \mathcal L_k &\iff \mathbf L_k^\top (\bm r_0 - \mathbf A \mathbf K_k \bm y_k) = \mathbf 0
+\end{align*}
+If $\mathbf L_k^\top \mathbf A \mathbf K_k$ is non-singular, we can express $\bm x_k$ as 
+\begin{align*}
+    \bm x_k = \bm x_0 + \mathbf K_k (\mathbf L_k^\top \mathbf A \mathbf K_k)^{-1} \mathbf L_k^\top \bm r_0.
+\end{align*}
+Note that this requires $\mathbf L_k^\top \mathbf A \mathbf K_k$ be non-singular, which 
+can be violated even if $\mathbf A$ itself is non-singular.
+
+\begin{proposition}
+    $\mathbf L_k^\top \mathbf A \mathbf K_k$ is non-singular if 
+    \begin{itemize}
+        \item $\mathbf A \succ \bm 0$ and $\mathcal L = \mathcal K$, or 
+        \item $\det \mathbf A \ne 0$ and $\mathcal L = \mathbf A \mathcal K$.
+    \end{itemize}
+\end{proposition}
+
+\subsection{Relation to CG and GMRES}
+\begin{theorem}
+    The case where $\mathbf A \succ \bm 0$ and $\mathcal L_k = \mathcal K_k$
+    is equivalent to CG, 
+    \begin{align*}
+        \bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \| \bm x - \bm x^\star \|_\mathbf A = \bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \frac{1}{2} \langle \bm x, \mathbf A \bm x \rangle - \langle \bm b, \bm x \rangle.
+    \end{align*}
+    The case where $\det \mathbf A \ne 0$ and $\mathcal L_k = \mathbf A \mathcal K_k$ 
+    is equivalent to MINRES/GMRES,
+    \begin{align*}
+        \bm x_k = \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \| \mathbf A \bm x - \bm b \|_2.
+    \end{align*}
+\end{theorem}
+
+\newpage
+In the proof that orthogonal projection is equivalent to CG, you rewrite the 
+arg min function to use $\bm y \in \mathbb R^k$ instead of $\bm x$ in the affine 
+subspace. I'm not sure that these two lines are equal. It looks like the first arg min (1) returns 
+an $\bm x$ in the affine subspace and the second line (2) returns a $\bm y$ 
+which is coefficients on the basis $\mathbf K_k$.
+
+    Let $\bm x = \bm x_0 + \mathbf K_k \bm y$ for $\bm y \in \mathbb R^k$. Then, 
+    \begin{align}
+        \bm x_k &= \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \frac{1}{2} \langle \bm x, \mathbf A \bm x \rangle - \langle \bm b, \bm x \rangle \\ 
+        \text{``$\bm x_k$''?}& = \underset{\bm y \in \mathbb R^k} {\arg \min} \frac{1}{2} \langle \bm x_0 + \mathbf K_k \bm y, \mathbf A(x_0 + \mathbf K_k \bm y)\rangle - \langle \bm b, x_0 + \mathbf K_k \bm y \rangle
+    \end{align}
+    Would it be more correct to say this?
+    \begin{align*}
+        \bm y_k &= \underset{\bm y \in \mathbb R^k} {\arg \min} \frac{1}{2} \langle \bm x_0 + \mathbf K_k \bm y, \mathbf A(x_0 + \mathbf K_k \bm y)\rangle - \langle \bm b, x_0 + \mathbf K_k \bm y \rangle \\
+        \bm x_k &= \bm x_0 + \mathbf K_k \bm y_k
+    \end{align*}
 
 
 
