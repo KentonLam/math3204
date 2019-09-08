@@ -376,7 +376,7 @@ How can we enforce these constraints? Specifically, we need
     \quad\text{and}\quad
     \left\langle\bm{r}_{0}-\mathbf{A} \bm{z}_{k}, \bm{w}\right\rangle= 0, ~\forall ~\bm{w} \in \mathcal{L}_{k}.
 \end{align*}
-Suppose $\mathbf K_k$ and $\mathbf L_k$ are orthonormal bases for $\mathcal K_k$
+Suppose $\mathbf K_k$ and $\mathbf L_k$ are bases for $\mathcal K_k$
 and $\mathcal L_k$ respectively.  Then, 
 \begin{align*}
     \bm{z}_{k} \in \mathcal{K}_{k} &\iff  \bm z_k = \mathbf K_k \bm y_k, \text{ for some } \bm y_k \in \mathbb R^k \\ 
@@ -411,24 +411,86 @@ can be violated even if $\mathbf A$ itself is non-singular.
     \end{align*}
 \end{theorem}
 
+
+\section{Examples of Krylov Subspace Methods}
+We seek
+$\bm x_k = \bm x_0 + \bm z_k$, where
+\begin{align*}
+    \bm{z}_{k} \in \mathcal{K}_{k}
+    \quad\text{and}\quad
+    \bm{r}_{0}-\mathbf{A} \bm{z}_{k} \perp \mathcal{L}_{k}.
+\end{align*}
+We know what the optimal criteris is, but how do we compute the optimal $\bm x_k$?
+
 \newpage
-In the proof that orthogonal projection is equivalent to CG, you rewrite the 
-arg min function to use $\bm y \in \mathbb R^k$ instead of $\bm x$ in the affine 
-subspace. I'm not sure that these two lines are equal. It looks like the first arg min (1) returns 
-an $\bm x$ in the affine subspace and the second line (2) returns a $\bm y$ 
-which is coefficients on the basis $\mathbf K_k$.
-
-    Let $\bm x = \bm x_0 + \mathbf K_k \bm y$ for $\bm y \in \mathbb R^k$. Then, 
-    \begin{align}
-        \bm x_k &= \underset{\bm x \in \bm x_0 + \mathcal K_k(\mathbf A, \bm r_0)}{\arg \min } \frac{1}{2} \langle \bm x, \mathbf A \bm x \rangle - \langle \bm b, \bm x \rangle \\ 
-        \text{``$\bm x_k$''?}& = \underset{\bm y \in \mathbb R^k} {\arg \min} \frac{1}{2} \langle \bm x_0 + \mathbf K_k \bm y, \mathbf A(x_0 + \mathbf K_k \bm y)\rangle - \langle \bm b, x_0 + \mathbf K_k \bm y \rangle
-    \end{align}
-    Would it be more correct to say this?
+ Computing the optimal $\bm x_k$ involves subproblems 
+depending on the type of projection method being used.
+Recall that $\mathbf A \mathbf Q_k = \mathbf Q_{k+1} \mathbf H_{k+1,k}$ as from 
+Arnoldi process.
+\begin{itemize}
+    \item For orthogonal projection (CG), we have $\mathcal L_k = \mathcal K_k = \Range \mathbf Q_k$ and 
+    $\bm x_k = \bm x_0 + \mathbf Q_k \bm y$. Then, 
     \begin{align*}
-        \bm y_k &= \underset{\bm y \in \mathbb R^k} {\arg \min} \frac{1}{2} \langle \bm x_0 + \mathbf K_k \bm y, \mathbf A(x_0 + \mathbf K_k \bm y)\rangle - \langle \bm b, x_0 + \mathbf K_k \bm y \rangle \\
-        \bm x_k &= \bm x_0 + \mathbf K_k \bm y_k
+        \mathbf{Q}_{k}^{\top}\left(\bm{r}_{0}-\mathbf{A} \mathbf{Q}_{k} \bm{y}\right)=\mathbf{0} \Longleftrightarrow \mathbf{Q}_{k}^{\top} \mathbf{A} \mathbf{Q}_{k} \bm{y}=\mathbf{Q}_{k}^{\top} \bm{r}_{0} \Longleftrightarrow \mathbf{H}_{k} \bm{y}=\left\|\bm{r}_{0}\right\| \bm{e}_{1}.
     \end{align*}
+    Note that the last equality holds because the first component
+     of $\mathbf Q_k^\top \bm r_0$  is just $\langle \bm r_0 / \| \bm r_0 \|, \bm r_0\rangle$
+    and its columns are orthogonal so the other elements evaluate to 0.
+    \item For oblique projection (MINRES/GMRES), 
+    $\mathcal L_k = \mathbf A\mathcal K_k = \mathbf A\Range \mathbf Q_k$ 
+    and $\bm x_k = \bm x_0 + \mathbf Q_k \bm y$. Then, 
+    \begin{align*}
+        (\mathbf A \mathbf Q_k)^\top (\bm{r}_{0}-\mathbf{A} \mathbf{Q}_{k} \bm{y}) = \bm 0 \iff \mathbf Q_k^\top \mathbf A^\top \mathbf A \mathbf Q_k \bm y = \mathbf Q_k^\top \mathbf A^\top \bm r_0
+    \end{align*}
+    but note that this is exactly the normal equation for a least squares system. Thus, 
+    \begin{align*}
+        \bm y &= \underset{\bm y \in \mathbb R^k}{\arg \min} \frac{1}{2} \| \mathbf A \mathbf Q_k \bm y - \bm r_0 \|^2 \\ 
+        &= \underset{\bm y \in \mathbb R^k}{\arg \min} \frac{1}{2} \| \mathbf H_{k+1,k} \bm y - \mathbf Q_{k+1}^\top\bm r_0 \|^2 \\ 
+        &= \underset{\bm y \in \mathbb R^k}{\arg \min} \frac{1}{2} \Big\| \mathbf H_{k+1,k} \bm y - \|\bm r_0\| \bm e_1 \Big\|^2 
+    \end{align*}
+\end{itemize}
+When $\mathbf A$ is symmetric, then so is $\mathbf Q_k^\top \mathbf A \mathbf Q_k$.
+However, because this is upper Hessenberg and symmetric, it must be tridiagonal. 
+It is denoted $\mathbf T_k$ instead of $\mathbf H_k$. In this case, the Arnoldi 
+process is called the Lanczos process,
+\begin{align*}
+    \mathbf A \mathbf Q_{k} = \mathbf Q_{k+1} \mathbf T_{k+1,k}.
+\end{align*}
+The above subproblems can also  be rewritten with  $\mathbf T_k$ instead of $\mathbf H_k$.
 
+In a previous section, we discussed the breakdown of the Arnoldi (or equivalently Lanczos)
+method. Now, we show that this actually means we have found an exact solution.
+\begin{proposition}
+    If Arnoldi or Lanczos breaks down at step $t = t(\mathbf A, \bm r_0)$, 
+    then the iterate $\bm x_t$ from any projection method onto 
+    $\mathcal K_k(\mathbf A, \bm r_0)$ or $\mathbf A \mathcal K_k(\mathbf A, \bm r_0)$
+    is the exact solution.
+\end{proposition}
 
+\section{GMRES/MINRES}
+Suppose $\mathcal L_k = \mathbf A\mathcal K_k$ and $\mathbf A$ is not necessarily symmetric. 
+Then, the subproblem of minimising
+\begin{align*}
+    \Big\|\mathbf{H}_{k+1,k} \bm{y}-\left\|\bm{r}_{0}\right\| \bm{e}_{1}\Big\|
+\end{align*}
+can be solved using the reduced QR factorisation $\mathbf{H}_{k+1,k} = \mathbf U_{k+1,k}\mathbf R_k$
+by
+\begin{align*}
+    \bm y = \| \bm r_0 \| \mathbf R_k^{-1} \mathbf U_{k+1,k}^\top \bm e_1
+\end{align*}
+and the residual at the $k$-th iteration can be computed as 
+\begin{align*}
+    \| \bm b - \mathbf A \bm x_k \| = \| \bm r_0 \| \sqrt{1 - \|\mathbf U_{k+1,k}^\top \bm e_1 \|^2}.
+\end{align*}
+This expression for $\| \bm r_k\|$ is particularly useful because we do not need to compute  $\mathbf A \bm x_k$.
+Careful inspection will show that each iteration only requires one matrix-vector product, 
+$\mathbf A \bm q_k$.
+
+In the case of $\mathbf A = \mathbf A^\top$ (symmetric), the method is 
+called MINRES and 
+\begin{align*}
+    \Big\|\mathbf{T}_{k+1,k} \bm{y}-\left\|\bm{r}_{0}\right\| \bm{e}_{1}\Big\|
+\end{align*}
+can be solved similarly to above (but more efficiently, of course).
 
 \end{document}
