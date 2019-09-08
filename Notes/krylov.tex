@@ -40,6 +40,7 @@ This is based on MATH3204 lectures and notes, lectured by Fred Roosta.
 These notes are meant to give an intuitive understanding of the topic and 
 omit many proofs which can be found in the lecture slides.
 
+\newpage
 \section{Introduction}
 The general form of a linear system is 
 \begin{align*}
@@ -308,7 +309,6 @@ we have a theorem.
     The Arnoldi process breaks down at step $j$, i.e.\ $h_{j+1, j}=0$, if and only if the grade of $\bm{r}_{0}$
      w.r.t. $\mathbf{A}$ is $j$. That is, $t\left(\bm{r}_{0}, \bm{A}\right)=j$.
 \end{theorem}
-For this reason, we call this termination a ``lucky breakdown''.
 
 \section{Optimality Criterion}
 Among infinitely many vectors, 
@@ -386,7 +386,8 @@ If $\mathbf L_k^\top \mathbf A \mathbf K_k$ is non-singular, we can express $\bm
 \begin{align*}
     \bm x_k = \bm x_0 + \mathbf K_k (\mathbf L_k^\top \mathbf A \mathbf K_k)^{-1} \mathbf L_k^\top \bm r_0.
 \end{align*}
-Note that this requires $\mathbf L_k^\top \mathbf A \mathbf K_k$ be non-singular, which 
+Note that this requires $\mathbf L_k^\top \mathbf A \mathbf K_k$ to be non-singular
+ which 
 can be violated even if $\mathbf A$ itself is non-singular.
 
 \begin{proposition}
@@ -422,8 +423,8 @@ $\bm x_k = \bm x_0 + \bm z_k$, where
 \end{align*}
 We know what the optimal criteris is, but how do we compute the optimal $\bm x_k$?
 
-\newpage
- Computing the optimal $\bm x_k$ involves subproblems 
+
+Computing the optimal $\bm x_k$ involves subproblems 
 depending on the type of projection method being used.
 Recall that $\mathbf A \mathbf Q_k = \mathbf Q_{k+1} \mathbf H_{k+1,k}$ as from 
 Arnoldi process.
@@ -466,8 +467,9 @@ method. Now, we show that this actually means we have found an exact solution.
     $\mathcal K_k(\mathbf A, \bm r_0)$ or $\mathbf A \mathcal K_k(\mathbf A, \bm r_0)$
     is the exact solution.
 \end{proposition}
+For this reason, this breakdown is sometimes called a ``lucky breakdown''.
 
-\section{GMRES/MINRES}
+\subsection{Minimum Residual (MINRES/GMRES)}
 Suppose $\mathcal L_k = \mathbf A\mathcal K_k$ and $\mathbf A$ is not necessarily symmetric. 
 Then, the subproblem of minimising
 \begin{align*}
@@ -492,5 +494,94 @@ called MINRES and
     \Big\|\mathbf{T}_{k+1,k} \bm{y}-\left\|\bm{r}_{0}\right\| \bm{e}_{1}\Big\|
 \end{align*}
 can be solved similarly to above (but more efficiently, of course).
+
+\subsection{Conjugate Gradient (CG)}
+Here, $\mathcal L_k = \mathcal K_k$. If $\mathbf A \ne \mathbf A^\top$, this is the 
+full orthogonalisation method (FOM).
+
+We consider CG, the case where $\mathbf A \succ 0$.
+Solving the linear system 
+$\mathbf T_k \bm y_k = \| \bm r_0 \| \bm e_1$ via Cholesky
+(LDL) factorisation will, in fact, give us the celebrated CG method.
+
+Let $\mathbf T_k = \mathbf L_k \mathbf D_k \mathbf L_k^\top$ be the Cholesky
+factorisation of $\mathbf T_k$ where $\mathbf L_k$ is unit lower bi-diagonal\footnote{That is, with 1's on the diagonal and non-zeros on the subdiagonal.} 
+and $\mathbf D_k$ is diagonal. Let $\bm x_k = \bm x_0 + \mathbf Q_k \bm y_k$. Firstly, 
+\begin{align*}
+    \mathbf T_k &= \mathbf Q_k^\top \mathbf A \mathbf Q_k \text{ and } \mathbf T_k \bm y_k = \| \bm r_0 \| \bm e_1 \\ 
+    &\implies \bm y_k = \| \bm r_0 \| \mathbf T_k^{-1}\bm e_1
+\end{align*}
+Using this in the expression for $\bm x_k$, 
+\begin{align*}
+    \bm x_k &= \bm x_0 + \mathbf Q_k \bm y_k  = \bm x_0 + \mathbf Q_k\| \bm r_0 \| \mathbf T_k^{-1}\bm e_1 \\ 
+    &= \bm x_0 + \| \bm r_0 \| \mathbf Q_k (\mathbf L_k \mathbf D_k \mathbf L_k^\top)^{-1} \bm e_1 \\ 
+    &= \bm x_0 +  \underbrace{\mathbf Q_k \mathbf L_k^{-\top} }_{\mathbf {\tilde P}_k}\, \underbrace{\| \bm r_0 \|\mathbf D_k^{-1} \mathbf L_k^{-1} \bm e_1}_{\bm {\tilde y}_k} \\ 
+    \bm x_k &= \bm x_0 + \mathbf {\tilde P}_k \bm {\tilde y}_k
+\end{align*}
+Since $\mathbf L_k$ is unit lower bi-diagonal, we can write $\mathbf L_k$ 
+and its inverse as
+\begin{align*}
+    \mathbf L_k = \begin{bmatrix}
+        \mathbf L_{k-1} & \bm 0 \\ 
+        \star & 1
+    \end{bmatrix}
+    \implies \mathbf L_k^{-1} = \begin{bmatrix}
+        \mathbf L_{k-1}^{-1} & \bm 0 \\ 
+        \star & 1
+    \end{bmatrix}.
+\end{align*}
+Below, let $\bm e_1^k$ denote a vector in $\mathbb R^k$ of zeros everywhere 
+except a 1 in the first position.
+A recursive expression for $\bm {\tilde y}_k$ is 
+\begin{align*}
+    \bm {\tilde y}_k &= \| \bm r_0 \|\mathbf D_k^{-1} \mathbf L_k^{-1} \bm e_1^k \\ 
+     &= \| \bm r_0 \|\begin{bmatrix}
+         \mathbf D_{k-1}^{-1} & \bm 0 \\ 
+         \bm 0 & d_k^{-1}
+     \end{bmatrix}\begin{bmatrix}
+        \mathbf L_{k-1}^{-1} & \bm 0 \\ 
+        \star & 1
+     \end{bmatrix}  \bm e_1^k \\ 
+     &= \| \bm r_0 \| \begin{bmatrix}
+        \mathbf D_{k-1}^{-1}\mathbf L_{k-1}^{-1}  & \bm 0 \\ 
+        \star & d_k^{-1}
+     \end{bmatrix} \begin{bmatrix}
+         \bm e_1^{k-1} \\ 0
+     \end{bmatrix} \\ 
+     &= \begin{bmatrix}
+         \bm {\tilde y}_{k-1} \\ \eta_k
+     \end{bmatrix}
+\end{align*}
+for a particular $\eta_k$ which characterises the recursion.
+
+Similarly for $\mathbf {\tilde P}_k$, we have 
+\begin{align*} 
+\tilde{\mathbf{P}}_{k} &=\mathbf{Q}_{k} \mathbf{L}_{k}^{-\top} \\ 
+&= \begin{bmatrix}
+    \mathbf Q_{k-1} & \bm q_k
+\end{bmatrix}\begin{bmatrix}
+    \mathbf L_k^{-\top} & \star \\ 
+    \bm 0 & 1
+\end{bmatrix} \\ 
+&= \begin{bmatrix}
+    \mathbf Q_{k-1} \mathbf L_{k-1}^{-\top} & \bm {\tilde p}_k
+\end{bmatrix} \\ 
+&= \begin{bmatrix}
+    \mathbf {\tilde P}_{k-1} & \bm {\tilde p}_k
+\end{bmatrix} 
+\end{align*}
+Together, we have 
+\begin{align*}
+    \bm x_k &= \bm x_0 + \mathbf {\tilde P}_k \bm {\tilde y}_k \\ 
+    &= \bm x_0 + \begin{bmatrix}
+        \mathbf {\tilde P}_{k-1} & \bm {\tilde p}_k
+    \end{bmatrix} \begin{bmatrix}
+        \bm {\tilde y}_{k-1} \\ \eta_k
+    \end{bmatrix} \\ 
+    &= \bm x_0 + \mathbf {\tilde P}_{k-1} \bm {\tilde y}_{k-1} + \eta_k \bm {\tilde p}_k \\ 
+    &= \bm x_{k-1} + \eta_k \bm {\tilde p}_k
+\end{align*}
+Also, from $\tilde{\mathbf{P}}_{k} \mathbf{L}_{k}^{\top}=\mathbf{Q}_{k},$ we get $\tilde{\bm{p}}_{k}=\bm{q}_{k}-\ell_{k-1} \tilde{\bm{p}}_{k-1}$ 
+by equating the matrices.
 
 \end{document}
