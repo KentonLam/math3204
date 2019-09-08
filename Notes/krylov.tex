@@ -229,10 +229,10 @@ except the $k$-th, where it is $h_{k+1,k}$.
 So $\mathbf{A} \mathbf{Q}_{k}=\mathbf{Q}_{k} \mathbf{H}_{k}+\bm{q}_{k+1} \bm{h}_{k}^{\top},$ and we can write
 \begin{align*}
     \mathbf{A} \mathbf{Q}_{k}=
-    \begin{bmatrix}
+    \underbrace{\begin{bmatrix}
         \mathbf Q_k & \bm q_{k+1}
-    \end{bmatrix}
-    \begin{bmatrix}\mathbf{H}_{k} \\[0.8em] \bm{h}_{k}^{\top}\end{bmatrix}, 
+    \end{bmatrix}}_{\mathbf Q_{k+1}}
+    \underbrace{\begin{bmatrix}\mathbf{H}_{k} \\[0.8em] \bm{h}_{k}^{\top}\end{bmatrix}}_{\mathbf H_{k+1,k}}, 
         \quad \text { where }\bm{h}_{k}^\top= \begin{bmatrix}
             0 & \cdots & 0 & h_{k+1,k}
         \end{bmatrix}.
@@ -246,6 +246,44 @@ the desired $\mathbf Q_k$.
 In the base case of $k=1$, 
 we just have $\bm q_1 = \bm r_0 / \| \bm r_0 \|$.
 
+For $k=2$, we have 
+\begin{align*}
+    \mathbf{A} \bm q_1=
+    \begin{bmatrix}
+        \bm q_1 & \bm q_2
+    \end{bmatrix}
+    \begin{bmatrix}
+        h_{11} \\ h_{21}
+    \end{bmatrix} \implies 
+    \mathbf A \bm q_1 = h_{11} \bm q_1 + h_{21} \bm q_2.
+\end{align*}
+We apply the fact that $\mathbf Q_k$ must have orthonormal columns. 
+\begin{align*}
+    \bm q_1^\top\mathbf A \bm q_1 = h_{11} \bm q_1^\top\bm q_1 + h_{21} \bm q_1^\top\bm q_2&& \implies h_{11} &= \langle \bm q_1, \mathbf A \bm q_1\rangle \\ 
+    \mathbf A \bm q_1 - h_{11} \bm q_1 = h_{21} \bm q_2&& \implies h_{21} &= \| \mathbf A \bm q_1 - h_{11} \bm q_1\| \\ 
+    &&\implies \,\,\bm q_2 &= \frac{\mathbf A \bm q_1 - h_{11} \bm q_1}{h_{21}}
+\end{align*}
+
+Consider the general case of $k=j$. Observe that the $j$-th step adds 
+one row and one column to $\mathbf H_{j+1,j}$, namely the $(j+1)$-th row and $j$-th 
+column. As block matrices, this can be visualised as 
+\begin{align*}
+    \mathbf A \mathbf Q_j &= \begin{bmatrix}
+        \mathbf Q_j & \bm q_{j+1}
+    \end{bmatrix}
+    \begin{bmatrix}
+        \mathbf H_{j,j-1} & \begin{matrix}
+            h_{1j} \\ \vdots \\ h_{jj}
+        \end{matrix} \\ 
+        \begin{matrix}
+            0 & \cdots & 0
+        \end{matrix} & h_{j+1,j}
+    \end{bmatrix}
+\end{align*}
+Because we only change the last columns and rows, this can be reduced to 
+\begin{align*}
+    \mathbf A \bm q_j = h_{1j}\bm q_1 + h_{2j} \bm q_2 + \cdots + h_{j+1,j}\bm q_{j+1}
+\end{align*}
 
 
 
