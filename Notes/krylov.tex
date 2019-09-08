@@ -38,10 +38,10 @@ Briefly, they have the following desirable properties:
 This is based on MATH3204 lectures and notes, lectured by Fred Roosta. 
 The lecure slides contain proofs of some theorems not proved here.
 
-\section{Motivation}
+\section{Introduction}
 The general form of a linear system is 
 \begin{align*}
-    \mathbf A \bm v^\star &= \bm b
+    \mathbf A \bm x^\star &= \bm b
 \end{align*}
 where $\mathbf A \in \mathbb C^{ \times n}$ and $\mathbf A$ is invertible. 
 Assume $\rho(\mathbf I - \mathbf A) < 1$. Then, we can write
@@ -128,7 +128,7 @@ To summarise, standard Krylov subspace solvers can be descibed as follows.
     A standard Krylov subspace method is an {iterative method}, 
     which starting from some $\bm x_0$, 
     generates an appropriate sequence of iterates 
-    $\bm x_k \in \bm x_0 + \mathcal K_k (\mathbf A, \bm r_0)$, 
+    $\bm x_k \in \bm x_0 + \mathcal K_k (\mathbf A, \bm r_0)$
     until it finds $\bm x^\star$ in exactly $t$ steps.
 
     The iterates are chosen appropriately such that if we terminate
@@ -136,7 +136,7 @@ To summarise, standard Krylov subspace solvers can be descibed as follows.
 \end{definition}
 Note that not all Krylov methods are of this form. Some are bulid upon 
 different types of subspace or work with multiple subspaces (e.g.\ they 
-also consider $\mathcal K_t (\mathbf A^*, \bm w)$).
+also consider $\mathcal K_k (\mathbf A^*, \bm w)$).
 
 Many terms are intentionally left vague in the above definition, because 
 Krylov subspace solders differ among themselves in many aspects, such as 
@@ -149,4 +149,104 @@ Additionally, in exact arithmetic, Krylov methods have finite termination proper
 (i.e.\ they will always finish with an exact solution in finite iterations). 
 Unfortunately, this does not hold in finite-precision
  arithmetic, such as on a computer.
+
+\section{Computing a Basis}
+\subsection{Motivation}
+How do we construct vectors from some vector space? With a basis for that 
+space, of course!
+
+Suppose the grade of $\bm r_0$ w.r.t.\ $\mathbf A$ is $n$, so the basis matrix 
+\begin{align*}
+    \mathbf K = \begin{bmatrix}
+        \bm r_0 & \mathbf A \bm r_0 & \cdots & \mathbf A^{n-1}\bm r_0
+    \end{bmatrix} \in \mathbb R^{n \times n}
+\end{align*}
+is invertible. Then, 
+\begin{align*}
+    \mathbf A \mathbf K &= \begin{bmatrix}
+        \mathbf A\bm r_0 & \mathbf A^2 \bm r_0 & \cdots & \mathbf A^{n}\bm r_0
+    \end{bmatrix} \\ 
+    &= \mathbf K \underbrace{\begin{bmatrix}
+        \bm e_2 & \bm e_3 & \cdots & \bm e_n & \mathbf K^{-1} \mathbf A^n \bm r_0
+    \end{bmatrix}}_{\mathbf C \in \mathbb R^{n \times n}}
+\end{align*}
+By construction, $\mathbf K^{-1} \mathbf A \mathbf K = \mathbf C$. It can be seen that 
+$\mathbf C$ is an $n \times n$ matrix and upper Hessenberg.
+Although $\mathbf C$ is sparse and easy to work with, such a basis is practically
+useless for our purposes. 
+\begin{itemize}
+    \item Because $\mathbf C$ is $n \times n$, we need $n$ matrix-vector products.
+    \item $\mathbf K$ could be very dense even if $\mathbf A$ is sparse. 
+    \item $\mathbf K$ is ill-conditioned.
+\end{itemize}
+
+Suppose we take the $\mathbf Q \mathbf R$ decomposition of $\mathbf K$, so 
+$\mathbf {K} = \mathbf {QR}$ where $\mathbf Q$ is orthogonal and $\mathbf R$ is 
+upper triangular. Then, 
+\begin{align*}
+    \mathbf{Q}^{\top} \mathbf{A} \mathbf{Q}=\mathbf{R} \mathbf{K}^{-1} \mathbf{A} \mathbf{K} \mathbf{R}^{-1}=\mathbf{R} \mathbf{C} \mathbf{R}^{-1} = \mathbf{H}
+\end{align*}
+where $\mathbf H$ is an upper Hessenberg matrix. 
+It can be seen that $\Range \mathbf K$ is the same as $\Range \mathbf Q$,
+ so $\mathbf Q$ also 
+spans our Krylov subspace.
+
+For the subspace $\mathcal K_k (\mathbf A, \bm r_0)$, $k \ll n$, 
+we search for $\mathbf Q_k \in \mathbb R^{n \times k}$ such that 
+\begin{align*}
+    \mathbf Q_k^\top \mathbf A \mathbf Q_k = \mathbf H_k \in \mathbb R^{k \times k}
+\end{align*}
+is upper Hessenberg. Note that this $\mathbf H_k$ is only $k \times k$ so 
+all our computations can be done with this smaller matrix. To summarise, 
+we aim to find $\mathbf Q_k$ with the following properties:
+\begin{itemize}
+    \item The columns  of $\mathbf Q_k$ form an orthonormal basis of $\mathcal K_k (\mathbf A, \bm r_0)$.
+    \item $\mathbf Q_k^\top \mathbf A \mathbf Q_k = \mathbf H_k$ is upper Hessenberg.
+\end{itemize}
+In general, $\mathbf A \mathbf Q_k \ne \mathbf Q_k \mathbf H_k$ for any $k < n$.
+Why is this so? Suppose we left-multiply $\mathbf Q_k^\top \mathbf A \mathbf Q_k = \mathbf H_k$
+ by $\mathbf Q_k$. 
+If this was orthgonal, we'd have $\mathbf Q_k \mathbf Q_k^\top = \mathbf I_n$.
+However, the matrix product  $\mathbf Q_k \mathbf Q_k^\top$ is essentially 
+a map $\mathbb R^n \to \mathbb R^k \to \mathbb R^n$. If this is identity, 
+it implies a $k$-dimensional set can span an $n$-dimensional space, 
+which is absurd since $k < n$.
+
+To get equality, we adjust with an error term $\mathbf E_k \in \mathbb R^{n \times k}$,
+\begin{align*}
+    \mathbf A \mathbf Q_k = \mathbf Q_k \mathbf H_k + \mathbf E_k.
+\end{align*}
+In order to have $\mathbf Q_k^\top \mathbf A \mathbf Q_k = \mathbf H_k$ 
+hold, we need $\mathbf Q_k^\top \mathbf E_k = \mathbf 0$.
+
+Suppose we have a vector $\bm q_{k+1}$, orthogonal to all $q_i \le k$.
+Then, if $\mathbf E_k = \bm q_{k+1} \bm h^\top_{k}$ for any $\bm h_k \in \mathbb R^n$. 
+Because $\bm q_{k+1}$ is orthogonal to every column of $\mathbf Q_k^\top$, we 
+see that $\mathbf Q_k^\top \mathbf E_k = \mathbf Q_k^\top \bm q_{k+1} \bm h^\top_{k} = \mathbf 0$. 
+Because this holds for any $\bm h_k$, we choose $\bm h_k$ with zeros in all positions 
+except the $k$-th, where it is $h_{k+1,k}$.
+
+So $\mathbf{A} \mathbf{Q}_{k}=\mathbf{Q}_{k} \mathbf{H}_{k}+\bm{q}_{k+1} \bm{h}_{k}^{\top},$ and we can write
+\begin{align*}
+    \mathbf{A} \mathbf{Q}_{k}=
+    \begin{bmatrix}
+        \mathbf Q_k & \bm q_{k+1}
+    \end{bmatrix}
+    \begin{bmatrix}\mathbf{H}_{k} \\[0.8em] \bm{h}_{k}^{\top}\end{bmatrix}, 
+        \quad \text { where }\bm{h}_{k}^\top= \begin{bmatrix}
+            0 & \cdots & 0 & h_{k+1,k}
+        \end{bmatrix}.
+\end{align*}
+This gives us an expression for $\bm q_{k+1}$ given all the previous $\bm q_k$'s.
+
+\subsection{Arnoldi Process}
+The Arnoldi algorithm is a modified version of Gram-Schmidt which finds 
+the desired $\mathbf Q_k$.
+
+In the base case of $k=1$, 
+we just have $\bm q_1 = \bm r_0 / \| \bm r_0 \|$.
+
+
+
+
 \end{document}
