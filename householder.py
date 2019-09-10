@@ -8,6 +8,8 @@ import scipy.sparse.linalg as spsla
 import time
 from typing import Tuple
 
+# sp.set_printoptions(edgeitems=30, linewidth=100000)
+
 def sign(x):
     if x == 0: return 0
     return 1 if x > 0 else -1
@@ -49,11 +51,11 @@ def householder(A) -> Tuple[sp.matrix, sp.matrix]:
             start = time.time()
         # print(i)
         v = A_sub[:, 0] # leftmost vector of A matrix
-        e_i = sps.dok_matrix((v.shape[0], 1))
+        e_i = sps.dok_matrix(v.shape)
         e_i[0] = 1 # vector with 1 in the first position.
-        e_i = sps.csc_matrix(e_i)
+        # e_i = sps.csc_matrix(e_i)
         
-        v_max = 1 #v.min() if -v.min() > v.max() else v.max()
+        v_max = v.min() if -v.min() > v.max() else v.max()
         u = v + sign(v_max) * spsla.norm(v) * e_i # compute u vector for P
         u = u / spsla.norm(u) # normalise
         _P = sps.identity(u.shape[0], format='csr') - 2 * (u @ u.T) # compute sub _P
@@ -64,14 +66,20 @@ def householder(A) -> Tuple[sp.matrix, sp.matrix]:
         # P = sps.block_diag((sps.identity(i), _P), format='csc')
 
         Q_sub = _P @ Q_sub
-        Q_full[i,i:] = Q_sub[0,:]
-        Q_full[i:,i] = Q_sub[:,0]
+        # Q_full = P @ Q_full
+        Q_full[i,:] = Q_sub[0,:]
+        # print(Q_full.toarray())
+        # print()
+        # Q_full[i,i:] = Q_sub[0,:]
+        # Q_full[i:,i] = Q_sub[:,0]
 
-        Q_sub = Q_sub[1:, 1:]
+        Q_sub = Q_sub[1:, 0:]
+        Q_sub.eliminate_zeros()
 
         # Q_full[i:,i:] = _P @ Q_full[i:,i:] # accumulated orthogonal Q
         # A[i:,i:] = _P @ A[i:,i:] # applying to A
         A_sub = _P @ A_sub
+        # A = P @ A
         A_full[i,i:] = A_sub[0,:]
         A_full[i:,i] = A_sub[:,0]
 
@@ -103,8 +111,8 @@ if __name__ == "__main__":
     
     A = L
     Q, R = householder(A)
-    print(Q.toarray())
-    print(R.toarray())
+    print(Q.toarray().round(4))
+    print(R.toarray().round(4))
     print('QR - A:', spsla.norm(Q @ R - A, sp.inf))
     print('QQ^T - I:', spsla.norm(Q @ Q.transpose() - sps.identity(Q.shape[0]), sp.inf))
     print('Q^TQ - I:', spsla.norm(Q.transpose() @ Q - sps.identity(Q.shape[0]), sp.inf))
