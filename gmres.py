@@ -12,6 +12,8 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
     if x_0 is None: 
         x_0 = sp.zeros((n, 1))
     r = b - A @ x_0
+    r_0_norm = spla.norm(r)
+    b_norm = spla.norm(b)
     H = sp.ndarray((1, 0))
     Q = r / spla.norm(r)
     Q.reshape((n, 1))
@@ -31,23 +33,42 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
             # print(q_i)
             z -= h[i, 0] * q_i 
         # h = sps.csc_matrix([h], shape=(len(h), 1))
-        h_j_plus_1 = spla.norm(z)
-        if sp.isclose(h_j_plus_1, 0):
-            print('BREAK')
-            break
-        q_j_plus_1 = z / h_j_plus_1
-        q_j_plus_1.reshape((n, 1))
-        # print(q_j_plus_1.shape)
-        Q_prev = Q
-        Q = sp.hstack([Q, q_j_plus_1])
+        h_last = spla.norm(z)
+        q_new = z / h_last
+        # q_new.reshape((n, 1))
+        # print(q_new.shape)
+        
         H = sp.block([
             [H, h],
-            [sp.zeros((1, H.shape[1])), h_j_plus_1]
+            [sp.zeros((1, H.shape[1])), h_last]
         ])
-        # print(H)
 
-    # print((Q.T @ A @ Q).round(4))
-    # print((A @ Q_prev - Q @ H))
+        e_1 = sp.zeros((k+1, 1)) # k+1 because it is multiplied by U_{k+1,k}^T
+        e_1[0,0] = 1
+
+        U, R = householder(sps.csr_matrix(H), True)
+        U = U.todense()
+        R = R.todense()
+        y_j = r_0_norm * spla.inv(R) @ U.T @ e_1
+        # print(y_j)
+        x_j = x_0 + Q @ y_j
+        # print(x_j)
+        # print(H)
+        Q = sp.hstack([Q, q_new])
+        r_j_norm = r_0_norm * sp.sqrt(1 - spla.norm(U.T @ e_1)**2)
+        print('residual:', r_j_norm)
+
+        if k > 1000:
+            print('terminating from iteration limit')
+            break 
+        if r_j_norm / b_norm <= 10**-6:
+            print('terminating from residual norm')
+            break
+    
+    print('iterations:', k)
+    print('x')
+    print(x_j)
+
 
 if __name__ == "__main__":
     A = lcd(0.1, 0.1, 4).todense()
