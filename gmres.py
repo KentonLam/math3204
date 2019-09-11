@@ -3,11 +3,15 @@ import scipy.linalg as spla
 import scipy.sparse as sps
 import scipy.sparse.linalg as spsla
 
+import time
+
 from householder import lcd, householder
 
 sp.set_printoptions(edgeitems=30, linewidth=100000)
 
 def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
+    start = time.time() 
+
     m, n = A.shape
     if x_0 is None: 
         x_0 = sp.zeros((n, 1))
@@ -46,10 +50,8 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
         e_1 = sp.zeros((k+1, 1)) # k+1 because it is multiplied by U_{k+1,k}^T
         e_1[0,0] = 1
 
-        U, R = householder(sps.csr_matrix(H), True)
-        U = U.todense()
-        R = R.todense()
-        y_j = r_0_norm * spla.inv(R) @ U.T @ e_1
+        U, R = householder(H, True)
+        y_j = spla.solve(R, r_0_norm * U.T @ e_1)
         # print(y_j)
         x_j = x_0 + Q @ y_j
         # print(x_j)
@@ -66,11 +68,12 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
             break
     
     print('iterations:', k)
+    print('time:', time.time() - start)
     print('x')
-    print(x_j)
+    print(x_j.flatten().round(3).tolist())
 
 
 if __name__ == "__main__":
-    A = lcd(0.1, 0.1, 20).todense()
+    A = lcd(0.1, 0.1, 10).todense()
     b = A @ sp.ones((A.shape[1], 1))
     gmres(A, b, None)
