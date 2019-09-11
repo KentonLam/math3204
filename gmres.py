@@ -13,8 +13,6 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
     start = time.time() 
 
     m, n = A.shape
-    if x_0 is None: 
-        x_0 = sp.zeros((n, 1))
     r = b - A @ x_0
     r_0_norm = spla.norm(r)
     b_norm = spla.norm(b)
@@ -70,10 +68,10 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
     print('iterations:', k)
     print('time:', time.time() - start)
     print('x')
-    print(x_j.flatten().round(3).tolist())
+    print(x_j.min(), x_j.max())
 
 
 if __name__ == "__main__":
-    A = lcd(0.1, 0.1, 10).todense()
+    A = lcd(0.1, 0.1, 100).todense()
     b = A @ sp.ones((A.shape[1], 1))
     gmres(A, b, None)
