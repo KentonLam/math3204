@@ -38,10 +38,10 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
     start = time.time()
     m, n = A.shape
 
-    A_full = sps.lil_matrix(A.shape)
+    A_full = sp.ndarray(A.shape)
     A_sub = A.copy()
 
-    Q_full = sps.identity(A.shape[0], format='csr')
+    Q_full = sp.identity(A.shape[0])
 
     for i in range(min(A.shape)): # iterate over smaller dimension of A
         # _A = A[i:,i:] # submatrix of A left to triangularise
@@ -51,18 +51,18 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
             start = time.time()
         # print(i)
         v = A_sub[:, 0] # leftmost vector of A matrix
-        e_i = sps.lil_matrix((v.shape[0], 1))
+        e_i = sp.zeros(v.shape[0])
         e_i[0] = 1 # vector with 1 in the first position.
-        e_i = sps.csr_matrix(e_i)
         
-        u = v + sign(v[0,0]) * spsla.norm(v) * e_i # compute u vector for P
-        u = u / spsla.norm(u) # normalise
-        _P = sps.identity(u.shape[0], format='csr') - 2 * (u @ u.T) # compute sub _P
+        u = v + sign(v.item(0)) * spla.norm(v) * e_i # compute u vector for P
+        u = u / spla.norm(u) # normalise
+        # print(u.shape)
+        _P = sp.identity(u.shape[0]) - 2 * sp.outer(u, u) # compute sub _P
 
         # _Q = sps.csr_matrix(Q_full[i:, i:])
         
         # embed this submatrix _P into the full size P
-        P = sps.block_diag((sps.identity(i), _P), format='csr')
+        P = spla.block_diag(sp.identity(i), _P)
 
         Q_full = P @ Q_full
         # print(Q_full.toarray())
@@ -82,7 +82,7 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
     if reduced:
         Q_full = Q_full[:, :n]
         A_full = A_full[:n, :]
-    A_full = sps.triu(A_full, format='csc')
+    A_full = sp.triu(A_full)
 
     # A = QR
     # Q_full is currently the inverse because it is applied to A.
