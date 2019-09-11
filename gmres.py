@@ -56,7 +56,7 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
         # print(H)
         Q = sp.hstack([Q, q_new])
         r_j_norm = r_0_norm * sp.sqrt(1 - spla.norm(U.T @ e_1)**2)
-        print('residual:', r_j_norm)
+        print(f'relative residual {k}:', r_j_norm / b_norm)
 
         if k > 1000:
             print('terminating from iteration limit')
@@ -71,6 +71,6 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
 
 
 if __name__ == "__main__":
-    A = lcd(0.1, 0.1, 4).todense()
+    A = lcd(0.1, 0.1, 20).todense()
     b = A @ sp.ones((A.shape[1], 1))
     gmres(A, b, None)

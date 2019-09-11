@@ -36,8 +36,6 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
     '''
     # Q_full = sps.identity(A.shape[0], format='csr')
     start = time.time()
-
-
     m, n = A.shape
 
     A_full = sps.lil_matrix(A.shape)
@@ -57,7 +55,7 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
         e_i[0] = 1 # vector with 1 in the first position.
         e_i = sps.csr_matrix(e_i)
         
-        u = v + sign(v[0]) * spsla.norm(v) * e_i # compute u vector for P
+        u = v + sign(v[0,0]) * spsla.norm(v) * e_i # compute u vector for P
         u = u / spsla.norm(u) # normalise
         _P = sps.identity(u.shape[0], format='csr') - 2 * (u @ u.T) # compute sub _P
 
@@ -80,17 +78,17 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
         A_sub = A_sub[1:,1:] # iterate into submatrix.
     
     Q_full = Q_full.T
-    A_full = sps.triu(A_full, format='csc')
 
     if reduced:
         Q_full = Q_full[:, :n]
         A_full = A_full[:n, :]
+    A_full = sps.triu(A_full, format='csc')
 
     # A = QR
     # Q_full is currently the inverse because it is applied to A.
     # thus, Q = Q_full^T.
     # note that A has been reduced to R by applying the P's.
-    return (Q_full, sps.csr_matrix(A_full))
+    return (Q_full, A_full)
     
 
 if __name__ == "__main__":
