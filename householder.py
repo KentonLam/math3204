@@ -40,41 +40,32 @@ def householder(A) -> Tuple[sp.matrix, sp.matrix]:
     A_full = sps.lil_matrix(A.shape)
     A_sub = A.copy()
 
-    Q_full = sps.identity(A.shape[0], format='lil')
-    Q_sub = sps.csr_matrix(Q_full)
+    Q_full = sps.identity(A.shape[0], format='csr')
 
     for i in range(min(A.shape)): # iterate over smaller dimension of A
         # _A = A[i:,i:] # submatrix of A left to triangularise
         # print(_A)
         if i % 100 == 0:
-            print(i, time.time() - start)
+            # print(i, time.time() - start)
             start = time.time()
         # print(i)
         v = A_sub[:, 0] # leftmost vector of A matrix
-        e_i = sps.dok_matrix(v.shape)
+        e_i = sps.lil_matrix(v.shape)
         e_i[0] = 1 # vector with 1 in the first position.
-        # e_i = sps.csc_matrix(e_i)
+        e_i = sps.csr_matrix(e_i)
         
-        v_max = v.min() if -v.min() > v.max() else v.max()
-        u = v + sign(v_max) * spsla.norm(v) * e_i # compute u vector for P
+        u = v + sign(v[0,0]) * spsla.norm(v) * e_i # compute u vector for P
         u = u / spsla.norm(u) # normalise
         _P = sps.identity(u.shape[0], format='csr') - 2 * (u @ u.T) # compute sub _P
 
         # _Q = sps.csr_matrix(Q_full[i:, i:])
         
         # embed this submatrix _P into the full size P
-        # P = sps.block_diag((sps.identity(i), _P), format='csc')
+        P = sps.block_diag((sps.identity(i), _P), format='csr')
 
-        Q_sub = _P @ Q_sub
-        # Q_full = P @ Q_full
-        Q_full[i,:] = Q_sub[0,:]
+        Q_full = P @ Q_full
         # print(Q_full.toarray())
         # print()
-        # Q_full[i,i:] = Q_sub[0,:]
-        # Q_full[i:,i] = Q_sub[:,0]
-
-        Q_sub = Q_sub[1:, 0:]
-        Q_sub.eliminate_zeros()
 
         # Q_full[i:,i:] = _P @ Q_full[i:,i:] # accumulated orthogonal Q
         # A[i:,i:] = _P @ A[i:,i:] # applying to A
@@ -83,10 +74,10 @@ def householder(A) -> Tuple[sp.matrix, sp.matrix]:
         A_full[i,i:] = A_sub[0,:]
         A_full[i:,i] = A_sub[:,0]
 
-        A_sub = A_sub[1:,1:]
+        A_sub = A_sub[1:,1:] # iterate into submatrix.
     
     # A = QR
-    # Q_full is currently the inverse because it is applied to A, to R.
+    # Q_full is currently the inverse because it is applied to A.
     # thus, Q = Q_full^T.
     # note that A has been reduced to R by applying the P's.
     return (Q_full.transpose(), sps.triu(A_full))
@@ -100,20 +91,18 @@ if __name__ == "__main__":
         [0, 2, 1],
         [10, 2, 3]
     ])
-    A = sp.array([
-        [1, 2, 3, 4],
-        [5, 6, 7, 8]
-    ])
+    # A = sp.array([
+    #     [1, 2, 3, 4],
+    #     [5, 6, 7, 8]
+    # ])
     A = sps.csr_matrix(A)
 
-    L = lcd(0.1, 0.1, 100)
+    L = lcd(0.1, 0.1, 30)
     L = sps.csc_matrix(L)
     
     A = L
     Q, R = householder(A)
-    print(Q.toarray().round(4))
-    print(R.toarray().round(4))
-    print('QR - A:', spsla.norm(Q @ R - A, sp.inf))
-    print('QQ^T - I:', spsla.norm(Q @ Q.transpose() - sps.identity(Q.shape[0]), sp.inf))
-    print('Q^TQ - I:', spsla.norm(Q.transpose() @ Q - sps.identity(Q.shape[0]), sp.inf))
+    print('QR - A:', spsla.norm(Q @ R - A))
+    print('QQ^T - I:', spsla.norm(Q @ Q.transpose() - sps.identity(Q.shape[0])))
+    print('Q^TQ - I:', spsla.norm(Q.transpose() @ Q - sps.identity(Q.shape[0])))
     
