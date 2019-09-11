@@ -8,14 +8,14 @@ from householder import lcd
 def pcg(A, b, x_0, P=None):
     if P is None:
         P = sp.identity(A.shape[0])
-    # P_inv = spla.inv(P)
+    P_inv = spla.inv(P)
     print('starting')
     r_0 = b - A @ x_0
 
     r_prev = r = r_0
-    r_prod = (r.T @ P.solve(r))
+    r_prod = (r.T @ P_inv @ (r))
     x = x_0
-    p = r_0
+    p = P_inv @ r_0
 
     k = 0
     while True:
@@ -27,9 +27,9 @@ def pcg(A, b, x_0, P=None):
         r_prev = r
         r_prev_prod = r_prod
         r = r - alpha * Ap
-        r_prod = (r.T @ P.solve(r))
+        r_prod = (r.T @ P_inv @ (r))
         beta = (r_prod / r_prev_prod).item()
-        p = P.solve(r) + beta * p 
+        p = P_inv @ (r) + beta * p 
         print(k, spla.norm(r))
 
         if spla.norm(r) <= 10**-12:
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # pcg(A, b, x_0, sp.diag(sp.diag(A)))
     print() 
     # P = spsla.spilu(A).solve(b)
-    P = spsla.spilu(A)
+    P = sp.diag(sp.diag(A.todense()))
     # P = spla.inv(P)
     # print(P)
     sol1 = pcg(A.todense(), b, x_0, P)
