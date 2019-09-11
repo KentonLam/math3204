@@ -70,8 +70,8 @@ def gmres(A: sp.matrix, b: sp.matrix, x_0: sp.matrix=None):
     print('x')
     print(x_j.min(), x_j.max())
 
-
 if __name__ == "__main__":
     A = lcd(0.1, 0.1, 100).todense()
     b = A @ sp.ones((A.shape[1], 1))
-    gmres(A, b, None)
+    x_0 = sp.zeros(b.shape)
+    gmres(A, b, x_0)
