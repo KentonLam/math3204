@@ -41,7 +41,7 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
     A_full = sp.ndarray(A.shape)
     A_sub = A.copy()
 
-    Q_full = sp.identity(A.shape[0])
+    Q_full = sp.identity(m)
 
     for i in range(min(A.shape)): # iterate over smaller dimension of A
         # _A = A[i:,i:] # submatrix of A left to triangularise
@@ -57,7 +57,7 @@ def householder(A, reduced=False) -> Tuple[sp.matrix, sp.matrix]:
         u = v + sign(v.item(0)) * spla.norm(v) * e_i # compute u vector for P
         u = u / spla.norm(u) # normalise
         # print(u.shape)
-        _P = sp.identity(u.shape[0]) - 2 * sp.outer(u, u) # compute sub _P
+        _P = sp.identity(v.shape[0]) - 2 * sp.outer(u, u) # compute sub _P
 
         # _Q = sps.csr_matrix(Q_full[i:, i:])
         
@@ -103,14 +103,16 @@ if __name__ == "__main__":
     #     [1, 2, 3, 4],
     #     [5, 6, 7, 8]
     # ])
-    A = sps.csr_matrix(A)
+    # A = sps.csr_matrix(A)
 
-    L = lcd(0.1, 0.1, 30)
-    L = sps.csc_matrix(L)
+    L = lcd(0.1, 0.1, 30).todense()
     
-    A = L
+    # A = L
     Q, R = householder(A)
-    print('QR - A:', spsla.norm(Q @ R - A))
-    print('QQ^T - I:', spsla.norm(Q @ Q.transpose() - sps.identity(Q.shape[0])))
-    print('Q^TQ - I:', spsla.norm(Q.transpose() @ Q - sps.identity(Q.shape[0])))
+    print(Q @ R)
+    print(Q @ Q.T)
+    print(Q.T @ Q)
+    print('QR - A:', spla.norm(Q @ R - A))
+    print('QQ^T - I:', spla.norm(Q @ Q.transpose() - sp.identity(Q.shape[0])))
+    print('Q^TQ - I:', spla.norm(Q.transpose() @ Q - sp.identity(Q.shape[0])))
     
